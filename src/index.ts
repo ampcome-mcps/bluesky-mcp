@@ -9,7 +9,7 @@ dotenv.config();
 const client = new BlueskyClient();
 
 const server = new McpServer({
-  name: "bluesky",
+  name: "bluesky-mcp",
   version: "1.0.0",
   capabilities: {
     resources: {},
@@ -75,18 +75,26 @@ server.tool(
         content: [
           {
             type: "text",
-            text: `Successfully created post: ${result.uri}`,
-          },
-        ],
+            text: JSON.stringify({
+              status: "success",
+              message: "Post created successfully",
+              uri: result.uri,
+              cid: result.cid
+            })
+          }
+        ]
       };
     } catch (error) {
       return {
         content: [
           {
             type: "text",
-            text: `Failed to create post: ${error}`,
-          },
-        ],
+            text: JSON.stringify({
+              status: "error",
+              message: `Failed to create post: ${error}`
+            })
+          }
+        ]
       };
     }
   }
@@ -122,7 +130,7 @@ server.tool(
 
 server.tool(
   "get-timeline",
-  "Get your Bluesky timeline",
+  "Get any user's Bluesky timeline",
   {
     limit: z.number().min(1).max(100).optional().describe("Number of posts to fetch (max 100)"),
   },
@@ -147,6 +155,79 @@ server.tool(
         ],
       };
     }
+  }
+);
+
+server.prompt(
+  "format-timeline",
+  { timeline: z.any() },
+  ({ timeline }) => {
+    interface PostAuthor {
+      displayName?: string;
+      handle: string;
+    }
+
+    interface PostEmbed {
+      $type: string;
+      external?: {
+        title: string;
+        description: string;
+      };
+      alt?: string;
+    }
+
+    interface Post {
+      post: {
+        author: PostAuthor;
+        record: {
+          text: string;
+          createdAt: string;
+        };
+        embed?: PostEmbed;
+        replyCount: number;
+        repostCount: number;
+        likeCount: number;
+      };
+      reason?: {
+        $type: string;
+        by: PostAuthor;
+      };
+    }
+
+    const formatPost = (post: Post) => {
+      const p = post.post;
+      const author = `${p.author.displayName || p.author.handle}`;
+      const text = p.record.text;
+      const stats = `💬 ${p.replyCount} 🔄 ${p.repostCount} ❤️ ${p.likeCount}`;
+      const time = new Date(p.record.createdAt).toLocaleString();
+      
+      let formatted = `@${author}: ${text}\n${stats} • ${time}\n`;
+      
+      if (p.embed) {
+        if (p.embed.$type === 'app.bsky.embed.external#view') {
+          formatted += `🔗 ${p.embed.external?.title}\n   ${p.embed.external?.description}\n`;
+        } else if (p.embed.$type === 'app.bsky.embed.video#view') {
+          formatted += `🎥 Video: ${p.embed.alt}\n`;
+        }
+      }
+      
+      if (post.reason?.$type === 'app.bsky.feed.defs#reasonRepost') {
+        formatted = `🔄 Reposted by @${post.reason.by.displayName || post.reason.by.handle}\n` + formatted;
+      }
+      
+      return formatted + '─'.repeat(50) + '\n';
+    };
+
+    const posts = timeline.data.feed.map(formatPost).join('\n');
+    return {
+      messages: [{
+        role: "assistant",
+        content: {
+          type: "text",
+          text: `📱 Timeline\n\n${posts}`
+        }
+      }]
+    };
   }
 );
 

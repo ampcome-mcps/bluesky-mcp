@@ -2,25 +2,7 @@
 
 A Model Context Protocol (MCP) server for Bluesky that can post on your behalf using the AT Protocol.
 
-## Setup
-
-1. Install dependencies:
-```bash
-npm install
-```
-
-2. Create a `.env` file based on `.env.example`:
-```
-BLUESKY_IDENTIFIER=your.handle.com
-BLUESKY_PASSWORD=your_app_password
-```
-
-3. Build the project:
-```bash
-npm run build
-```
-
-4. Configure Claude for Desktop:
+## Configure Claude for Desktop:
 
 Open your Claude for Desktop App configuration at `~/Library/Application Support/Claude/claude_desktop_config.json` and add:
 
