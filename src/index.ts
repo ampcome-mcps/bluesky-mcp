@@ -8,7 +8,6 @@ dotenv.config();
 
 const client = new BlueskyClient();
 
-// Create server instance
 const server = new McpServer({
   name: "bluesky",
   version: "1.0.0",
@@ -18,7 +17,6 @@ const server = new McpServer({
   },
 });
 
-// Register Bluesky tools
 server.tool(
   "login",
   "Login to Bluesky",

@@ -1,11 +1,11 @@
-import { AtpAgent, BlobRef, RichText } from '@atproto/api';
+import { BskyAgent, BlobRef, RichText } from '@atproto/api';
 
 export class BlueskyClient {
-  private agent: AtpAgent;
+  private agent: BskyAgent;
   private isAuthenticated: boolean = false;
 
   constructor(service: string = 'https://bsky.social') {
-    this.agent = new AtpAgent({ service });
+    this.agent = new BskyAgent({ service });
   }
 
   async login(identifier: string, password: string): Promise<void> {
@@ -29,7 +29,6 @@ export class BlueskyClient {
       await rt.detectFacets(this.agent);
 
       const postRecord: any = {
-        $type: 'app.bsky.feed.post',
         text: rt.text,
         facets: rt.facets,
         createdAt: new Date().toISOString(),
@@ -41,21 +40,25 @@ export class BlueskyClient {
           const response = await this.agent.uploadBlob(image.data, {
             encoding: image.encoding,
           });
-          uploadedImages.push(response.data.blob);
+          if (response.success) {
+            uploadedImages.push(response.data.blob);
+          }
         }
 
-        postRecord.embed = {
-          $type: 'app.bsky.embed.images',
-          images: uploadedImages.map((blob) => ({
-            alt: 'Image',
-            image: blob,
-          })),
-        };
+        if (uploadedImages.length > 0) {
+          postRecord.embed = {
+            $type: 'app.bsky.embed.images',
+            images: uploadedImages.map((blob) => ({
+              alt: 'Image',
+              image: blob,
+            })),
+          };
+        }
       }
 
       const response = await this.agent.post(postRecord);
       console.log('Successfully created post:', response.uri);
-      return { uri: response.uri, cid: response.cid };
+      return response;
     } catch (error) {
       console.error('Failed to create post:', error);
       throw error;
@@ -71,7 +74,7 @@ export class BlueskyClient {
       const profile = await this.agent.getProfile({
         actor: this.agent.session?.did as string,
       });
-      return profile.data;
+      return profile;
     } catch (error) {
       console.error('Failed to get profile:', error);
       throw error;
@@ -85,21 +88,21 @@ export class BlueskyClient {
 
     try {
       const timeline = await this.agent.getTimeline({ limit });
-      return timeline.data;
+      return timeline;
     } catch (error) {
       console.error('Failed to get timeline:', error);
       throw error;
     }
   }
 
-  async getPost(uri: string, cid: string): Promise<any> {
+  async getPost(postUri: string): Promise<any> {
     if (!this.isAuthenticated) {
       throw new Error('Not authenticated. Please login first.');
     }
 
     try {
-      const post = await this.agent.getPost({ uri, cid });
-      return post.data;
+      const post = await this.agent.getPostThread({ uri: postUri });
+      return post;
     } catch (error) {
       console.error('Failed to get post:', error);
       throw error;
