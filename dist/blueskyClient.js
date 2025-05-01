@@ -1,8 +1,17 @@
 import { BskyAgent, RichText } from '@atproto/api';
 export class BlueskyClient {
-    constructor(service = 'https://bsky.social') {
+    constructor() {
         this.isAuthenticated = false;
+        const service = process.env.BLUESKY_SERVICE || 'https://bsky.social';
         this.agent = new BskyAgent({ service });
+    }
+    async autoLogin() {
+        const identifier = process.env.BLUESKY_IDENTIFIER;
+        const password = process.env.BLUESKY_PASSWORD;
+        if (!identifier || !password) {
+            throw new Error('BLUESKY_IDENTIFIER and BLUESKY_PASSWORD must be set in Claude\'s config environment variables');
+        }
+        await this.login(identifier, password);
     }
     async login(identifier, password) {
         try {
@@ -94,6 +103,86 @@ export class BlueskyClient {
         }
         catch (error) {
             console.error('Failed to get post:', error);
+            throw error;
+        }
+    }
+    async getPosts(uris) {
+        if (!this.isAuthenticated) {
+            throw new Error('Not authenticated. Please login first.');
+        }
+        try {
+            const posts = await this.agent.getPosts({ uris });
+            return posts;
+        }
+        catch (error) {
+            console.error('Failed to get posts:', error);
+            throw error;
+        }
+    }
+    async deletePost(postUri) {
+        if (!this.isAuthenticated) {
+            throw new Error('Not authenticated. Please login first.');
+        }
+        try {
+            await this.agent.deletePost(postUri);
+            console.log('Successfully deleted post');
+        }
+        catch (error) {
+            console.error('Failed to delete post:', error);
+            throw error;
+        }
+    }
+    async likePost(uri, cid) {
+        if (!this.isAuthenticated) {
+            throw new Error('Not authenticated. Please login first.');
+        }
+        try {
+            const response = await this.agent.like(uri, cid);
+            console.log('Successfully liked post');
+            return response;
+        }
+        catch (error) {
+            console.error('Failed to like post:', error);
+            throw error;
+        }
+    }
+    async unlikePost(likeUri) {
+        if (!this.isAuthenticated) {
+            throw new Error('Not authenticated. Please login first.');
+        }
+        try {
+            await this.agent.deleteLike(likeUri);
+            console.log('Successfully unliked post');
+        }
+        catch (error) {
+            console.error('Failed to unlike post:', error);
+            throw error;
+        }
+    }
+    async repostPost(uri, cid) {
+        if (!this.isAuthenticated) {
+            throw new Error('Not authenticated. Please login first.');
+        }
+        try {
+            const response = await this.agent.repost(uri, cid);
+            console.log('Successfully reposted');
+            return response;
+        }
+        catch (error) {
+            console.error('Failed to repost:', error);
+            throw error;
+        }
+    }
+    async unrepostPost(repostUri) {
+        if (!this.isAuthenticated) {
+            throw new Error('Not authenticated. Please login first.');
+        }
+        try {
+            await this.agent.deleteRepost(repostUri);
+            console.log('Successfully removed repost');
+        }
+        catch (error) {
+            console.error('Failed to remove repost:', error);
             throw error;
         }
     }

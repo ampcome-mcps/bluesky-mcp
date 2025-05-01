@@ -2,8 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { BlueskyClient } from './blueskyClient.js';
-import dotenv from 'dotenv';
-dotenv.config();
 const client = new BlueskyClient();
 const server = new McpServer({
     name: "bluesky-mcp",
@@ -13,12 +11,17 @@ const server = new McpServer({
         tools: {},
     },
 });
-server.tool("login", "Login to Bluesky", {
-    identifier: z.string().describe("Your Bluesky handle or email"),
-    password: z.string().describe("Your Bluesky app password"),
+server.tool("login", "Login to Bluesky using credentials from .env file or provided parameters", {
+    identifier: z.string().optional().describe("Your Bluesky handle or email (optional if set in .env)"),
+    password: z.string().optional().describe("Your Bluesky app password (optional if set in .env)"),
 }, async ({ identifier, password }) => {
     try {
-        await client.login(identifier, password);
+        if (identifier && password) {
+            await client.login(identifier, password);
+        }
+        else {
+            await client.autoLogin();
+        }
         return {
             content: [
                 {
@@ -131,6 +134,183 @@ server.tool("get-timeline", "Get any user's Bluesky timeline", {
         };
     }
 });
+server.tool("get-post", "Get a specific post by URI", {
+    uri: z.string().describe("The URI of the post to fetch"),
+}, async ({ uri }) => {
+    try {
+        const post = await client.getPost(uri);
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: JSON.stringify(post, null, 2),
+                },
+            ],
+        };
+    }
+    catch (error) {
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `Failed to get post: ${error}`,
+                },
+            ],
+        };
+    }
+});
+server.tool("get-posts", "Get multiple posts by their URIs", {
+    uris: z.array(z.string()).describe("Array of post URIs to fetch"),
+}, async ({ uris }) => {
+    try {
+        const posts = await client.getPosts(uris);
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: JSON.stringify(posts, null, 2),
+                },
+            ],
+        };
+    }
+    catch (error) {
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `Failed to get posts: ${error}`,
+                },
+            ],
+        };
+    }
+});
+server.tool("delete-post", "Delete one of your posts", {
+    uri: z.string().describe("The URI of the post to delete"),
+}, async ({ uri }) => {
+    try {
+        await client.deletePost(uri);
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: "Post deleted successfully",
+                },
+            ],
+        };
+    }
+    catch (error) {
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `Failed to delete post: ${error}`,
+                },
+            ],
+        };
+    }
+});
+server.tool("like-post", "Like a post", {
+    uri: z.string().describe("The URI of the post to like"),
+    cid: z.string().describe("The CID of the post to like"),
+}, async ({ uri, cid }) => {
+    try {
+        const result = await client.likePost(uri, cid);
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `Successfully liked post. Like URI: ${result.uri}`,
+                },
+            ],
+        };
+    }
+    catch (error) {
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `Failed to like post: ${error}`,
+                },
+            ],
+        };
+    }
+});
+server.tool("unlike-post", "Remove your like from a post", {
+    likeUri: z.string().describe("The URI of the like to remove"),
+}, async ({ likeUri }) => {
+    try {
+        await client.unlikePost(likeUri);
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: "Successfully removed like",
+                },
+            ],
+        };
+    }
+    catch (error) {
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `Failed to remove like: ${error}`,
+                },
+            ],
+        };
+    }
+});
+server.tool("repost", "Repost someone's post", {
+    uri: z.string().describe("The URI of the post to repost"),
+    cid: z.string().describe("The CID of the post to repost"),
+}, async ({ uri, cid }) => {
+    try {
+        const result = await client.repostPost(uri, cid);
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `Successfully reposted. Repost URI: ${result.uri}`,
+                },
+            ],
+        };
+    }
+    catch (error) {
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `Failed to repost: ${error}`,
+                },
+            ],
+        };
+    }
+});
+server.tool("unrepost", "Remove your repost", {
+    repostUri: z.string().describe("The URI of the repost to remove"),
+}, async ({ repostUri }) => {
+    try {
+        await client.unrepostPost(repostUri);
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: "Successfully removed repost",
+                },
+            ],
+        };
+    }
+    catch (error) {
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `Failed to remove repost: ${error}`,
+                },
+            ],
+        };
+    }
+});
 server.prompt("format-timeline", { timeline: z.any() }, ({ timeline }) => {
     const formatPost = (post) => {
         const p = post.post;
@@ -139,7 +319,6 @@ server.prompt("format-timeline", { timeline: z.any() }, ({ timeline }) => {
         const stats = `💬 ${p.replyCount} 🔄 ${p.repostCount} ❤️ ${p.likeCount}`;
         const time = new Date(p.record.createdAt).toLocaleString();
         let formatted = `@${author}: ${text}\n${stats} • ${time}\n`;
-        // Add embed information if exists
         if (p.embed) {
             if (p.embed.$type === 'app.bsky.embed.external#view') {
                 formatted += `🔗 ${p.embed.external?.title}\n   ${p.embed.external?.description}\n`;
@@ -148,7 +327,6 @@ server.prompt("format-timeline", { timeline: z.any() }, ({ timeline }) => {
                 formatted += `🎥 Video: ${p.embed.alt}\n`;
             }
         }
-        // Add repost information if exists
         if (post.reason?.$type === 'app.bsky.feed.defs#reasonRepost') {
             formatted = `🔄 Reposted by @${post.reason.by.displayName || post.reason.by.handle}\n` + formatted;
         }
@@ -168,6 +346,14 @@ server.prompt("format-timeline", { timeline: z.any() }, ({ timeline }) => {
 async function main() {
     const transport = new StdioServerTransport();
     await server.connect(transport);
+    // Try to auto-login if credentials are in .env
+    try {
+        await client.autoLogin();
+        console.error("Auto-logged in to Bluesky using .env credentials");
+    }
+    catch (error) {
+        console.error("Note: Auto-login failed. Use the login tool with credentials to authenticate.");
+    }
     console.error("Bluesky MCP Server running on stdio");
 }
 main().catch((error) => {
