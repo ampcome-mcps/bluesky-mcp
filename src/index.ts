@@ -154,7 +154,10 @@ server.tool(
         content: [
           {
             type: "text",
-            text: "Successfully logged in to Bluesky",
+            text: JSON.stringify({
+              status: "success",
+              message: "Successfully logged in to Bluesky"
+            }),
           },
         ],
       };
@@ -260,7 +263,11 @@ server.tool(
   async ({ limit }) => {
     try {
       const timeline = await client.getTimeline(limit);
-      const formatted = formatTimeline(timeline.data.feed);
+      const formatted = formatTimeline(
+        (timeline.data.feed || [])
+          .map((item: any) => item.post)
+          .filter(Boolean)
+      );
       return {
         content: [
           {
@@ -355,7 +362,10 @@ server.tool(
         content: [
           {
             type: "text",
-            text: "Post deleted successfully",
+            text: JSON.stringify({
+              status: "success",
+              message: "Post deleted successfully"
+            }),
           },
         ],
       };
@@ -386,7 +396,10 @@ server.tool(
         content: [
           {
             type: "text",
-            text: `Successfully liked post. Like URI: ${result.uri}`,
+            text: JSON.stringify({
+              status: "success",
+              message: `Successfully liked post. Like URI: ${result.uri}`,
+            }),
           },
         ],
       };
@@ -416,7 +429,10 @@ server.tool(
         content: [
           {
             type: "text",
-            text: "Successfully removed like",
+            text: JSON.stringify({
+              status: "success",
+              message: "Successfully removed like",
+            }),
           },
         ],
       };
@@ -447,7 +463,10 @@ server.tool(
         content: [
           {
             type: "text",
-            text: `Successfully reposted. Repost URI: ${result.uri}`,
+            text: JSON.stringify({
+              status: "success",
+              message: `Successfully reposted. Repost URI: ${result.uri}`,
+            }),
           },
         ],
       };
@@ -477,7 +496,10 @@ server.tool(
         content: [
           {
             type: "text",
-            text: "Successfully removed repost",
+            text: JSON.stringify({
+              status: "success",
+              message: "Successfully removed repost",
+            }),
           },
         ],
       };
