@@ -21,7 +21,7 @@ Open your Claude for Desktop App configuration at `~/Library/Application Support
 ```json
 {
     "mcpServers": {
-        "bluesky": {
+        "bluesky-mcp": {
             "command": "npx",
             "args": ["-y", "@semihberkay/bluesky-mcp"],
             "env": {

@@ -10,6 +10,9 @@
         "dev": "ts-node src/index.ts",
         "prepublishOnly": "npm run build"
     },
+    "bin": {
+        "bluesky-mcp": "dist/index.js"
+    },
     "files": [
         "dist",
         "README.md"
