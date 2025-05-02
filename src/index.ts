@@ -116,21 +116,23 @@ export function formatTimeline(
 ): TimelineResponse {
   return {
     count: posts.length,
-    posts: posts.map((post, i) => ({
-      position: i + 1,
-      author: {
-        handle: post.author.handle,
-        displayName: post.author.displayName,
-      },
-      content: post.text,
-      stats: {
-        replies: post.replyCount,
-        reposts: post.repostCount,
-        likes: post.likeCount,
-      },
-      createdAt: post.createdAt,
-      url: `${baseUrl}/${post.author.handle}/post/${post.uri.split("/").pop()}`,
-    })),
+    posts: posts
+      .filter(post => post.author && post.author.handle)
+      .map((post, i) => ({
+        position: i + 1,
+        author: {
+          handle: post.author?.handle || "unknown",
+          displayName: post.author?.displayName,
+        },
+        content: post.text,
+        stats: {
+          replies: post.replyCount,
+          reposts: post.repostCount,
+          likes: post.likeCount,
+        },
+        createdAt: post.createdAt,
+        url: `${baseUrl}/${post.author.handle}/post/${post.uri.split("/").pop()}`,
+      })),
   };
 }
 
