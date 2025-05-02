@@ -23,7 +23,7 @@ Open your Claude for Desktop App configuration at `~/Library/Application Support
     "mcpServers": {
         "bluesky": {
             "command": "npx",
-            "args": ["-y", "@semioz/bluesky-mcp"],
+            "args": ["-y", "@semihberkay/bluesky-mcp"],
             "env": {
                 "BLUESKY_IDENTIFIER": "your.handle.bsky.social",
                 "BLUESKY_PASSWORD": "your-app-password",

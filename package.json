@@ -1,5 +1,5 @@
 {
-    "name": "@semioz/bluesky-mcp",
+    "name": "@semihberkay/bluesky-mcp",
     "version": "1.0.0",
     "description": "MCP server for Bluesky",
     "main": "dist/index.js",

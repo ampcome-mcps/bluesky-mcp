@@ -14,6 +14,125 @@ const server = new McpServer({
   },
 });
 
+interface PostAuthor {
+  displayName?: string;
+  handle: string;
+}
+
+interface PostEmbed {
+  $type: string;
+  external?: {
+    title: string;
+    description: string;
+  };
+  alt?: string;
+}
+
+interface Post {
+  post: {
+    author: PostAuthor;
+    record: {
+      text: string;
+      createdAt: string;
+    };
+    embed?: PostEmbed;
+    replyCount: number;
+    repostCount: number;
+    likeCount: number;
+  };
+  reason?: {
+    $type: string;
+    by: PostAuthor;
+  };
+}
+
+export const ConfigSchema = z.object({
+  identifier: z.string().min(1, "Bluesky handle or email is required"),
+  password: z.string().min(1, "Bluesky app password is required"),
+});
+export type Config = z.infer<typeof ConfigSchema>;
+
+export const CreatePostSchema = z.object({
+  text: z.string().min(1, "Post text cannot be empty"),
+  images: z
+    .array(
+      z.object({
+        data: z.string().describe("Base64 encoded image data"),
+        encoding: z.string().describe("Image MIME type (e.g., image/jpeg)"),
+      })
+    )
+    .optional(),
+});
+
+export const GetTimelineSchema = z.object({
+  limit: z.number().int().min(1).max(100).optional(),
+});
+
+export type CreatePostArgs = z.infer<typeof CreatePostSchema>;
+export type GetTimelineArgs = z.infer<typeof GetTimelineSchema>;
+
+export interface BlueskyUser {
+  handle: string;
+  displayName?: string;
+}
+
+export interface BlueskyPost {
+  uri: string;
+  cid: string;
+  author: BlueskyUser;
+  text: string;
+  createdAt: string;
+  replyCount: number;
+  repostCount: number;
+  likeCount: number;
+  embed?: any;
+}
+
+export interface FormattedPost {
+  position: number;
+  author: {
+    handle: string;
+    displayName?: string;
+  };
+  content: string;
+  stats: {
+    replies: number;
+    reposts: number;
+    likes: number;
+  };
+  createdAt: string;
+  url: string;
+}
+
+export interface TimelineResponse {
+  count: number;
+  posts: FormattedPost[];
+}
+
+export function formatTimeline(
+  posts: BlueskyPost[],
+  baseUrl: string = "https://bsky.app/profile"
+): TimelineResponse {
+  return {
+    count: posts.length,
+    posts: posts.map((post, i) => ({
+      position: i + 1,
+      author: {
+        handle: post.author.handle,
+        displayName: post.author.displayName,
+      },
+      content: post.text,
+      stats: {
+        replies: post.replyCount,
+        reposts: post.repostCount,
+        likes: post.likeCount,
+      },
+      createdAt: post.createdAt,
+      url: `${baseUrl}/${post.author.handle}/post/${post.uri.split("/").pop()}`,
+    })),
+  };
+}
+
 server.tool(
   "login",
   "Login to Bluesky using credentials from .env file or provided parameters",
@@ -131,18 +250,19 @@ server.tool(
 
 server.tool(
   "get-timeline",
-  "Get any user's Bluesky timeline",
+  "Get Bluesky timeline",
   {
-    limit: z.number().min(1).max(100).optional().describe("Number of posts to fetch (max 100)"),
+    limit: GetTimelineSchema.shape.limit,
   },
   async ({ limit }) => {
     try {
       const timeline = await client.getTimeline(limit);
+      const formatted = formatTimeline(timeline.data.feed);
       return {
         content: [
           {
             type: "text",
-            text: JSON.stringify(timeline, null, 2),
+            text: JSON.stringify(formatted, null, 2),
           },
         ],
       };
@@ -371,84 +491,10 @@ server.tool(
   }
 );
 
-server.prompt(
-  "format-timeline",
-  { timeline: z.any() },
-  ({ timeline }) => {
-    interface PostAuthor {
-      displayName?: string;
-      handle: string;
-    }
-
-    interface PostEmbed {
-      $type: string;
-      external?: {
-        title: string;
-        description: string;
-      };
-      alt?: string;
-    }
-
-    interface Post {
-      post: {
-        author: PostAuthor;
-        record: {
-          text: string;
-          createdAt: string;
-        };
-        embed?: PostEmbed;
-        replyCount: number;
-        repostCount: number;
-        likeCount: number;
-      };
-      reason?: {
-        $type: string;
-        by: PostAuthor;
-      };
-    }
-
-    const formatPost = (post: Post) => {
-      const p = post.post;
-      const author = `${p.author.displayName || p.author.handle}`;
-      const text = p.record.text;
-      const stats = `💬 ${p.replyCount} 🔄 ${p.repostCount} ❤️ ${p.likeCount}`;
-      const time = new Date(p.record.createdAt).toLocaleString();
-      
-      let formatted = `@${author}: ${text}\n${stats} • ${time}\n`;
-      
-      if (p.embed) {
-        if (p.embed.$type === 'app.bsky.embed.external#view') {
-          formatted += `🔗 ${p.embed.external?.title}\n   ${p.embed.external?.description}\n`;
-        } else if (p.embed.$type === 'app.bsky.embed.video#view') {
-          formatted += `🎥 Video: ${p.embed.alt}\n`;
-        }
-      }
-      
-      if (post.reason?.$type === 'app.bsky.feed.defs#reasonRepost') {
-        formatted = `🔄 Reposted by @${post.reason.by.displayName || post.reason.by.handle}\n` + formatted;
-      }
-      
-      return formatted + '─'.repeat(50) + '\n';
-    };
-
-    const posts = timeline.data.feed.map(formatPost).join('\n');
-    return {
-      messages: [{
-        role: "assistant",
-        content: {
-          type: "text",
-          text: `📱 Timeline\n\n${posts}`
-        }
-      }]
-    };
-  }
-);
-
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   
-  // Try to auto-login if credentials are in .env
   try {
     await client.autoLogin();
     console.error("Auto-logged in to Bluesky using .env credentials");
