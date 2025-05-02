@@ -24,7 +24,7 @@ export class BlueskyClient {
     try {
       await this.agent.login({ identifier, password });
       this.isAuthenticated = true;
-      console.log('Successfully logged in to Bluesky');
+      console.error('Successfully logged in to Bluesky');
     } catch (error) {
       console.error('Failed to login:', error);
       throw error;
@@ -69,7 +69,7 @@ export class BlueskyClient {
       }
 
       const response = await this.agent.post(postRecord);
-      console.log('Successfully created post:', response.uri);
+      console.error('Successfully created post:', response.uri);
       return response;
     } catch (error) {
       console.error('Failed to create post:', error);
@@ -142,7 +142,7 @@ export class BlueskyClient {
 
     try {
       await this.agent.deletePost(postUri);
-      console.log('Successfully deleted post');
+      console.error('Successfully deleted post');
     } catch (error) {
       console.error('Failed to delete post:', error);
       throw error;
@@ -156,7 +156,7 @@ export class BlueskyClient {
 
     try {
       const response = await this.agent.like(uri, cid);
-      console.log('Successfully liked post');
+      console.error('Successfully liked post');
       return response;
     } catch (error) {
       console.error('Failed to like post:', error);
@@ -171,7 +171,7 @@ export class BlueskyClient {
 
     try {
       await this.agent.deleteLike(likeUri);
-      console.log('Successfully unliked post');
+      console.error('Successfully unliked post');
     } catch (error) {
       console.error('Failed to unlike post:', error);
       throw error;
@@ -185,7 +185,7 @@ export class BlueskyClient {
 
     try {
       const response = await this.agent.repost(uri, cid);
-      console.log('Successfully reposted');
+      console.error('Successfully reposted');
       return response;
     } catch (error) {
       console.error('Failed to repost:', error);
@@ -200,7 +200,7 @@ export class BlueskyClient {
 
     try {
       await this.agent.deleteRepost(repostUri);
-      console.log('Successfully removed repost');
+      console.error('Successfully removed repost');
     } catch (error) {
       console.error('Failed to remove repost:', error);
       throw error;

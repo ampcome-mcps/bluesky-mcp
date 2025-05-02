@@ -166,7 +166,10 @@ server.tool(
         content: [
           {
             type: "text",
-            text: `Failed to login: ${error}`,
+            text: JSON.stringify({
+              status: "error",
+              message: `Failed to login: ${error}`
+            }),
           },
         ],
       };
@@ -246,7 +249,10 @@ server.tool(
         content: [
           {
             type: "text",
-            text: `Failed to get profile: ${error}`,
+            text: JSON.stringify({
+              status: "error",
+              message: `Failed to get profile: ${error}`
+            }),
           },
         ],
       };
@@ -281,7 +287,10 @@ server.tool(
         content: [
           {
             type: "text",
-            text: `Failed to get timeline: ${error}`,
+            text: JSON.stringify({
+              status: "error",
+              message: `Failed to get timeline: ${error}`
+            }),
           },
         ],
       };
@@ -311,7 +320,10 @@ server.tool(
         content: [
           {
             type: "text",
-            text: `Failed to get post: ${error}`,
+            text: JSON.stringify({
+              status: "error",
+              message: `Failed to get post: ${error}`
+            }),
           },
         ],
       };
@@ -341,7 +353,10 @@ server.tool(
         content: [
           {
             type: "text",
-            text: `Failed to get posts: ${error}`,
+            text: JSON.stringify({
+              status: "error",
+              message: `Failed to get posts: ${error}`
+            }),
           },
         ],
       };
@@ -374,7 +389,10 @@ server.tool(
         content: [
           {
             type: "text",
-            text: `Failed to delete post: ${error}`,
+            text: JSON.stringify({
+              status: "error",
+              message: `Failed to delete post: ${error}`
+            }),
           },
         ],
       };
@@ -408,7 +426,10 @@ server.tool(
         content: [
           {
             type: "text",
-            text: `Failed to like post: ${error}`,
+            text: JSON.stringify({
+              status: "error",
+              message: `Failed to like post: ${error}`
+            }),
           },
         ],
       };
@@ -441,7 +462,10 @@ server.tool(
         content: [
           {
             type: "text",
-            text: `Failed to remove like: ${error}`,
+            text: JSON.stringify({
+              status: "error",
+              message: `Failed to remove like: ${error}`
+            }),
           },
         ],
       };
@@ -475,7 +499,10 @@ server.tool(
         content: [
           {
             type: "text",
-            text: `Failed to repost: ${error}`,
+            text: JSON.stringify({
+              status: "error",
+              message: `Failed to repost: ${error}`
+            }),
           },
         ],
       };
@@ -508,7 +535,10 @@ server.tool(
         content: [
           {
             type: "text",
-            text: `Failed to remove repost: ${error}`,
+            text: JSON.stringify({
+              status: "error",
+              message: `Failed to remove repost: ${error}`
+            }),
           },
         ],
       };
