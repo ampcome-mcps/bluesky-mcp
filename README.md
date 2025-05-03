@@ -1,8 +1,20 @@
 # Bluesky MCP Server
 
+[![smithery badge](https://smithery.ai/badge/@semioz/bluesky-mcp)](https://smithery.ai/server/@semioz/bluesky-mcp)
+
 A Model Context Protocol (MCP) server for Bluesky that can post on your behalf by using the AT Protocol.
 
 ## Setup
+
+### Installing via Smithery
+
+To install bluesky-mcp for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@semioz/bluesky-mcp):
+
+```bash
+npx -y @smithery/cli install @semioz/bluesky-mcp --client claude
+```
+
+### Manual Installation
 
 1. Install dependencies:
 ```bash
