@@ -8,14 +8,14 @@ const client = new BlueskyClient();
 
 const server = new McpServer({
   name: "bluesky-mcp",
-  version: "1.0.0",
+  version: "1.0.7",
   capabilities: {
     resources: {},
     tools: {},
   },
 });
 
-interface PostAuthor {
+interface User {
   displayName?: string;
   handle: string;
 }
@@ -27,24 +27,6 @@ interface PostEmbed {
     description: string;
   };
   alt?: string;
-}
-
-interface Post {
-  post: {
-    author: PostAuthor;
-    record: {
-      text: string;
-      createdAt: string;
-    };
-    embed?: PostEmbed;
-    replyCount: number;
-    repostCount: number;
-    likeCount: number;
-  };
-  reason?: {
-    $type: string;
-    by: PostAuthor;
-  };
 }
 
 export const ConfigSchema = z.object({
@@ -71,16 +53,10 @@ export const GetTimelineSchema = z.object({
 
 export type CreatePostArgs = z.infer<typeof CreatePostSchema>;
 export type GetTimelineArgs = z.infer<typeof GetTimelineSchema>;
-
-export interface BlueskyUser {
-  handle: string;
-  displayName?: string;
-}
-
 export interface BlueskyPost {
   uri: string;
   cid: string;
-  author: BlueskyUser;
+  author: User;
   text: string;
   createdAt: string;
   replyCount: number;
