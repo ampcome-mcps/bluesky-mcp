@@ -16,17 +16,7 @@ npx -y @smithery/cli install @semioz/bluesky-mcp --client claude
 
 ### Manual Installation
 
-1. Install dependencies:
-```bash
-npm install
-```
-
-2. Build the project:
-```bash
-npm run build
-```
-
-3. Configure Claude for Desktop:
+Configure Claude for Desktop:
 
 Open your Claude for Desktop App configuration at `~/Library/Application Support/Claude/claude_desktop_config.json` and add:
 
