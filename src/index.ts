@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.ts';
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp';
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio";
 import { z } from "zod";
-import { BlueskyClient } from './blueskyClient.js';
+import { BlueskyClient } from './blueskyClient';
 
 const client = new BlueskyClient();
 
